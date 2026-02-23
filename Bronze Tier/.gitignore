@@ -1,0 +1,9 @@
+.env
+credentials.json
+token.json
+__pycache__/
+*.pyc
+AI_Employee_Vault/Logs/
+*.log
+.DS_Store
+Thumbs.db
