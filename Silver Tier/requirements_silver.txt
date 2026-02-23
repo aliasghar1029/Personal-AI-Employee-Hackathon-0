@@ -1,0 +1,24 @@
+# Silver Tier Additional Requirements
+# Install with: pip install -r requirements_silver.txt
+
+# Scheduling
+schedule>=1.2.0
+
+# Browser Automation (WhatsApp, LinkedIn)
+playwright>=1.40.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Web Framework (for future MCP servers)
+flask>=3.0.0
+
+# Note: Bronze tier requirements are also needed
+# Install Bronze tier requirements first:
+# pip install -r requirements.txt
+
+# After installing, run:
+# playwright install
