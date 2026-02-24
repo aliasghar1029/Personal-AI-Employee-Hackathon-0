@@ -1,5 +1,3 @@
-2026/02/23-20:55:17.895 2e1c Reusing MANIFEST E:\Hacka thone\Silver Tier\whatsapp_session\Default\Local Storage\leveldb/MANIFEST-000001
-2026/02/23-20:55:17.905 2e1c Recovering log #3
-2026/02/23-20:55:17.907 2e1c Reusing old log E:\Hacka thone\Silver Tier\whatsapp_session\Default\Local Storage\leveldb/000003.log 
-2026/02/23-20:55:48.978 20ec Level-0 table #5: started
-2026/02/23-20:55:49.044 20ec Level-0 table #5: 19845 bytes OK
+2026/02/24-21:00:58.229 174c Reusing MANIFEST E:\Hackathone\Silver Tier\whatsapp_session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/02/24-21:00:58.236 174c Recovering log #4
+2026/02/24-21:00:58.238 174c Reusing old log E:\Hackathone\Silver Tier\whatsapp_session\Default\Local Storage\leveldb/000004.log 

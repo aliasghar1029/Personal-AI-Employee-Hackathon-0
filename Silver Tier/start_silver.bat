@@ -53,6 +53,11 @@ echo [4/4] Starting Scheduler...
 start "Scheduler" python scheduler.py
 timeout /t 2 /nobreak >nul
 
+REM Start LinkedIn Poster
+echo [5/5] Starting LinkedIn Poster...
+start "LinkedIn Poster" cmd /k "cd AI_Employee_Vault && python linkedin_poster.py"
+timeout /t 2 /nobreak >nul
+
 echo.
 echo ========================================
 echo All watchers started successfully!
@@ -63,9 +68,9 @@ echo   - Gmail Watcher (checks every 2 minutes)
 echo   - WhatsApp Watcher (checks every 60 seconds)
 echo   - File System Watcher (monitors Drop_Here folder)
 echo   - Scheduler (orchestrates all tasks)
+echo   - LinkedIn Poster (checks every 60 seconds)
 echo.
 echo Additional services you can start manually:
-echo   - LinkedIn Poster: python linkedin_poster.py
 echo   - Email MCP Server: python email_mcp_server.py
 echo.
 echo Check AI_Employee_Vault/Dashboard.md in Obsidian

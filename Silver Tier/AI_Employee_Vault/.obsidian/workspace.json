@@ -182,6 +182,13 @@
   },
   "active": "cf2e92ba8f3bcc6d",
   "lastOpenFiles": [
+    "Social/Done/post_003.md",
+    "Social/LinkedIn_Queue/post_003.md",
+    "Social/LinkedIn_Queue/post_001.md",
+    "Social/Done/post_001.md",
+    "Social/Done/post_002.md",
+    "Logs/linkedin_posts.json",
+    "Social/LinkedIn_Queue/post_002.md",
     "Done/REPLY_EMAIL_20260223_212109_Error_decoding.md",
     "Logs/sent_emails.json",
     "Approved/REPLY_EMAIL_20260223_212109_Error_decoding.md",
@@ -208,15 +215,8 @@
     "__pycache__/gmail_watcher.cpython-312.pyc",
     "__pycache__",
     "Needs_Action/EMAIL_20260222_222247_Error decoding.md",
-    "Needs_Action/EMAIL_20260222_222246_Error decoding.md",
-    "Needs_Action/EMAIL_20260222_222245_Error decoding.md",
-    "Needs_Action/EMAIL_20260222_222244_Error decoding.md",
     "AI_Employee_Vault/Needs_Action",
     "AI_Employee_Vault/Logs",
-    "AI_Employee_Vault",
-    "Logs/gmail_watcher.log",
-    "Needs_Action/EMAIL_20260222_213324_Error decoding.md",
-    "Needs_Action/EMAIL_20260222_213323_Error decoding.md",
-    "Done/email_to_test_approval.md"
+    "AI_Employee_Vault"
   ]
 }

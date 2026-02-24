@@ -30,12 +30,11 @@ _None_
 - Total Processed: 0
 
 ## LinkedIn
-- Last Checked: Not yet
-- Posts in Queue: 0
-- Scheduled Posts: 0
+- Last Checked: 2026-02-24 22:06
+- Posts in Queue: 1
+- Scheduled Posts: 1
 - Posts This Week: 0
-- DRY_RUN: Yes
-
+- DRY_RUN: No
 ## Email Status
 - Last Checked: 2026-02-23 21:23
 - Emails Sent Today: 1
