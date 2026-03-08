@@ -1,13 +1,13 @@
 # AI Employee Dashboard
-Last Updated: 2026-03-08 21:19
+Last Updated: 2026-03-08 21:51
 
 ## Status
-- Pending Actions: 2
+- Pending Actions: 28
 - Plans in Progress: 0
 - Pending Approvals: 0
 - Completed Today: 0
 - Emails Sent Today: 0
-- LinkedIn Posts This Week: 0
+- LinkedIn Posts This Week: 2
 
 ## Recent Activity
 - **2026-02-23 21:22:** REPLY_EMAIL_20260223_212109_Error_decoding → Completed
@@ -28,32 +28,14 @@ _None_
 - Total Processed: 0
 
 ## LinkedIn
-- Last Checked: 2026-03-08 21:43
+- Last Checked: 2026-02-24 22:06
 - Posts in Queue: 1
 - Scheduled Posts: 1
-- Posts Published: 3
 - Posts This Week: 0
 - DRY_RUN: No
+
 ## Email Status
 - Last Checked: 2026-02-23 21:23
 - Emails Sent Today: 1
 - Total Emails Sent: 1
 - DRY_RUN: No
-## Odoo Status
-- Connection: Connected ✅
-- URL: http://localhost:8069
-- Database: ai_employee
-- Pending Invoices: 2
-- Actions Today: 0
-- DRY_RUN: No
-## System Health
-- Gmail Watcher: ❌
-- Whatsapp Watcher: ✅
-- Filesystem Watcher: ✅
-- Facebook Manager: ❌
-- Linkedin Poster: ❌
-- Email Mcp: ✅
-- Odoo Mcp: ✅
-- Scheduler: ✅
-- Last Error: None
-- Queued Errors: 0

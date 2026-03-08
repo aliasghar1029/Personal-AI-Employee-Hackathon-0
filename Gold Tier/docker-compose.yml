@@ -1,0 +1,171 @@
+version: '3.1'
+
+# ===========================================
+# Odoo 18 Community Edition with PostgreSQL
+# Gold Tier AI Employee Integration
+# ===========================================
+# This Docker Compose file sets up a local Odoo instance
+# for accounting integration with the AI Employee system.
+#
+# Usage:
+#   1. Start Odoo: docker-compose up -d
+#   2. Access Odoo: http://localhost:8069
+#   3. First login: admin / admin
+#   4. Create database: ai_employee
+#   5. Install Accounting module
+#
+# Stop Odoo: docker-compose down
+# View logs: docker-compose logs -f
+# ===========================================
+
+services:
+  # ===========================================
+  # Odoo Service
+  # ===========================================
+  odoo:
+    image: odoo:18
+    container_name: ai_employee_odoo
+    restart: unless-stopped
+    ports:
+      - "8069:8069"  # Odoo web interface
+    
+    volumes:
+      # Persist Odoo data (addons, sessions, etc.)
+      - odoo-data:/var/lib/odoo
+      # Optional: Mount custom addons
+      # - ./odoo-addons:/mnt/extra-addons
+    
+    environment:
+      # Database connection settings
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      
+      # Odoo admin password (for database management)
+      - ODOO_ADMIN_PASSWORD=admin
+      
+      # Optional: Set timezone
+      - TZ=UTC
+    
+    depends_on:
+      - db
+    
+    networks:
+      - odoo-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================
+  # PostgreSQL Database Service
+  # ===========================================
+  db:
+    image: postgres:15
+    container_name: ai_employee_odoo_db
+    restart: unless-stopped
+    
+    volumes:
+      # Persist database data
+      - db-data:/var/lib/postgresql/data
+    
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+    
+    networks:
+      - odoo-network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ===========================================
+# Named Volumes
+# ===========================================
+volumes:
+  # Odoo data volume (addons, sessions, filestore)
+  odoo-data:
+    driver: local
+  
+  # Database volume (all Odoo data)
+  db-data:
+    driver: local
+
+# ===========================================
+# Network Configuration
+# ===========================================
+networks:
+  odoo-network:
+    driver: bridge
+
+# ===========================================
+# Quick Start Guide
+# ===========================================
+# 1. First Time Setup:
+#    docker-compose up -d
+#    
+# 2. Access Odoo:
+#    Open browser: http://localhost:8069
+#    
+# 3. Create Database:
+#    - Click "Create Database"
+#    - Master Password: admin
+#    - Database Name: ai_employee
+#    - Email: admin@example.com
+#    - Password: admin (change this!)
+#    
+# 4. Install Apps:
+#    - Go to Apps menu
+#    - Search and install "Accounting" or "Invoicing"
+#    - Configure chart of accounts
+#    
+# 5. Configure AI Employee:
+#    - Update .env file with Odoo credentials
+#    - ODOO_URL=http://localhost:8069
+#    - ODOO_DB=ai_employee
+#    - ODOO_USERNAME=admin
+#    - ODOO_PASSWORD=your_password
+#    
+# 6. Start Odoo MCP Server:
+#    python odoo_mcp_server.py
+#
+# ===========================================
+# Maintenance Commands
+# ===========================================
+# View logs:
+#   docker-compose logs -f odoo
+#   docker-compose logs -f db
+#
+# Stop services:
+#   docker-compose down
+#
+# Stop and remove volumes (WARNING: deletes all data):
+#   docker-compose down -v
+#
+# Restart services:
+#   docker-compose restart
+#
+# Update Odoo:
+#   docker-compose pull
+#   docker-compose up -d
+#
+# Backup database:
+#   docker-compose exec db pg_dump -U odoo postgres > backup.sql
+#
+# Restore database:
+#   docker-compose exec -T db psql -U odoo < backup.sql
+#
+# ===========================================

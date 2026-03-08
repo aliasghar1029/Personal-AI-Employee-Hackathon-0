@@ -1,0 +1,55 @@
+# Gold Tier Additional Requirements
+# Install with: pip install -r requirements_gold.txt
+# Note: Install Bronze and Silver tier requirements first
+
+# ===========================================
+# Facebook Integration
+# ===========================================
+facebook-sdk>=3.1.0
+
+# ===========================================
+# Odoo Integration
+# ===========================================
+# XML-RPC for Odoo (usually included in Python stdlib)
+# docker-compose for Odoo deployment (install separately)
+
+# ===========================================
+# Browser Automation (Facebook Playwright)
+# ===========================================
+# Already in Silver Tier requirements:
+# playwright>=1.40.0
+
+# ===========================================
+# Scheduling & Utilities
+# ===========================================
+schedule>=1.2.0
+# Already in Silver Tier requirements:
+# python-dotenv>=1.0.0
+# requests>=2.31.0
+
+# ===========================================
+# Additional Utilities
+# ===========================================
+# For JSON-RPC communication
+xmlrpc-client>=1.0.1
+
+# For better date handling
+python-dateutil>=2.8.2
+
+# ===========================================
+# Installation Instructions
+# ===========================================
+# 1. First install Bronze tier requirements:
+#    pip install -r requirements.txt
+#
+# 2. Then install Silver tier requirements:
+#    pip install -r requirements_silver.txt
+#
+# 3. Finally install Gold tier requirements:
+#    pip install -r requirements_gold.txt
+#
+# 4. Install Playwright browsers:
+#    playwright install
+#
+# 5. Install Docker Desktop for Odoo:
+#    https://www.docker.com/products/docker-desktop/
