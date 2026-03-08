@@ -10,4 +10,5 @@ Thumbs.db
 .env
 credentials.json
 token.json
+
 whatsapp_session/
