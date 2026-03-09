@@ -20,6 +20,8 @@ from dotenv import load_dotenv, set_key, unset_key
 from urllib.parse import urlencode, parse_qs, urlparse
 import requests
 
+from dashboard_manager import get_dashboard_manager
+
 # Load environment variables
 load_dotenv()
 
@@ -191,6 +193,7 @@ class LinkedInPoster:
         self.access_token = LINKEDIN_ACCESS_TOKEN
         self.user_id = None
         self.posts_published = 0
+        self.dashboard = get_dashboard_manager()
         self._initialize()
 
     def _initialize(self):
@@ -560,55 +563,23 @@ class LinkedInPoster:
     def _update_dashboard(self):
         """Update the Dashboard.md with LinkedIn status."""
         try:
-            if not DASHBOARD_PATH.exists():
-                return
-
-            content = DASHBOARD_PATH.read_text(encoding='utf-8')
+            now = datetime.now().strftime('%Y-%m-%d %H:%M')
             queue_count = len(list(LINKEDIN_QUEUE.glob('*.md')))
             
-            # Read current posts published count from dashboard
-            posts_published_count = 0
-            if 'Posts Published:' in content:
-                for line in content.split('\n'):
-                    if 'Posts Published:' in line:
-                        try:
-                            posts_published_count = int(line.split(':')[1].strip())
-                        except:
-                            posts_published_count = 0
-                        break
-            
             # Add the newly published posts
-            posts_published_count += self.posts_published
+            self.dashboard.increment_metric('linkedin_posts_total', self.posts_published)
+            self.dashboard.increment_metric('linkedin_posts_today', self.posts_published)
+            self.dashboard.increment_metric('linkedin_posts_week', self.posts_published)
             
             this_week = len([p for p in self.posted_posts if 'post_' in p])
 
-            linkedin_section = f"""## LinkedIn
-- Last Checked: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-- Posts in Queue: {queue_count}
-- Scheduled Posts: {queue_count}
-- Posts Published: {posts_published_count}
-- Posts This Week: {this_week}
-- DRY_RUN: {'Yes' if DRY_RUN else 'No'}
-"""
-
-            if '## LinkedIn' not in content:
-                content += '\n' + linkedin_section.strip() + '\n'
-            else:
-                lines = content.split('\n')
-                new_lines = []
-                in_section = False
-                for line in lines:
-                    if line.startswith('## LinkedIn'):
-                        in_section = True
-                        new_lines.append(linkedin_section.strip())
-                    elif in_section and line.startswith('## '):
-                        in_section = False
-                        new_lines.append(line)
-                    elif not in_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-
-            DASHBOARD_PATH.write_text(content, encoding='utf-8')
+            self.dashboard.update_service('linkedin', {
+                'linkedin_last_post': now if self.posts_published > 0 else self.dashboard.state.get('linkedin_last_post', 'Never'),
+                'linkedin_queue': queue_count,
+                'linkedin_posts_week': this_week,
+                'linkedin_dry_run': DRY_RUN,
+                'linkedin_status': 'Running'
+            })
             logger.info("Dashboard updated")
 
         except Exception as e:

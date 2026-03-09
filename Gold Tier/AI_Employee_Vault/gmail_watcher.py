@@ -18,6 +18,8 @@ from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from dotenv import load_dotenv
 
+from dashboard_manager import get_dashboard_manager
+
 # Load environment variables
 load_dotenv()
 
@@ -54,6 +56,7 @@ class GmailWatcher:
         self.processed_ids = set()
         self.emails_this_hour = 0
         self.last_hour_reset = time.time()
+        self.dashboard = get_dashboard_manager()
         self._initialize()
     
     def _initialize(self):
@@ -291,51 +294,25 @@ _Add any notes or context here_
             
             # Update dashboard
             self._update_dashboard(len(new_messages))
-            
+
         except HttpError as error:
             logger.error(f"Gmail API error: {error}")
         except Exception as e:
             logger.error(f"Error checking Gmail: {e}")
-    
+
     def _update_dashboard(self, new_emails_count: int):
         """Update the Dashboard.md with Gmail status."""
-        dashboard_path = VAULT_PATH / 'Dashboard.md'
-        
         try:
-            if not dashboard_path.exists():
-                return
+            now = datetime.now().strftime('%Y-%m-%d %H:%M')
             
-            content = dashboard_path.read_text(encoding='utf-8')
-            
-            # Add Gmail status section if not exists
-            gmail_section = f"""
-## Gmail Status
-- Last Checked: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-- New Emails: {new_emails_count}
-- Processed This Hour: {self.emails_this_hour}/{MAX_EMAILS_PER_HOUR}
-"""
-            
-            if '## Gmail Status' not in content:
-                content += '\n' + gmail_section
-            else:
-                # Update existing section
-                lines = content.split('\n')
-                new_lines = []
-                in_gmail_section = False
-                for line in lines:
-                    if line.startswith('## Gmail Status'):
-                        in_gmail_section = True
-                        new_lines.append(gmail_section.strip())
-                    elif in_gmail_section and line.startswith('## '):
-                        in_gmail_section = False
-                        new_lines.append(line)
-                    elif not in_gmail_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-            
-            dashboard_path.write_text(content, encoding='utf-8')
+            self.dashboard.update_service('gmail', {
+                'gmail_last_checked': now,
+                'gmail_new_emails': new_emails_count,
+                'gmail_processed_hour': self.emails_this_hour,
+                'gmail_status': 'Running'
+            })
             logger.info("Dashboard updated")
-            
+
         except Exception as e:
             logger.error(f"Error updating dashboard: {e}")
     

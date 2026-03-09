@@ -15,6 +15,8 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
+from dashboard_manager import get_dashboard_manager
+
 import schedule
 
 # Load environment variables
@@ -47,6 +49,7 @@ CHECK_INTERVAL = int(os.getenv('SCHEDULER_CHECK_INTERVAL', '120'))  # 2 minutes
 
 class Scheduler:
     def __init__(self):
+        self.dashboard = get_dashboard_manager()
         self._initialize()
         self._load_state()
     
@@ -405,15 +408,13 @@ _Add your focus and priorities for next week_
         except:
             return 0
     
-    def _update_dashboard(self, rejected_count: int = 0, 
+    def _update_dashboard(self, rejected_count: int = 0,
                           briefing_generated: bool = False,
                           weekly_summary_generated: bool = False):
         """Update the Dashboard.md with current status."""
         try:
-            if not DASHBOARD_PATH.exists():
-                return
-            
-            content = DASHBOARD_PATH.read_text(encoding='utf-8')
+            now = datetime.now().strftime('%Y-%m-%d %H:%M')
+            today = datetime.now().strftime('%Y-%m-%d')
             
             # Count various items
             pending_count = len(list(NEEDS_ACTION.glob('*.md'))) + len(list(IN_PROGRESS.glob('*.md')))
@@ -425,55 +426,28 @@ _Add your focus and priorities for next week_
             # Count LinkedIn posts this week
             linkedin_posts = self._count_linkedin_posts_this_week()
             
-            # Build status section
-            status_section = f"""# AI Employee Dashboard
-Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-
-## Status
-- Pending Actions: {pending_count}
-- Plans in Progress: {plans_count}
-- Pending Approvals: {pending_approvals}
-- Completed Today: {done_today}
-- Emails Sent Today: {emails_today}
-- LinkedIn Posts This Week: {linkedin_posts}
-
-## Recent Activity
-"""
-            # Add recent activity
-            recent_activity = self._get_recent_activity()
-            if recent_activity:
-                status_section += recent_activity
-            else:
-                status_section += "_No activity yet_\n"
+            # Update dashboard manager state
+            self.dashboard.state['pending_actions'] = pending_count
+            self.dashboard.state['tasks_completed_today'] = done_today
+            self.dashboard.state['tasks_completed_week'] = linkedin_posts
+            self.dashboard.state['emails_sent_today'] = emails_today
             
-            status_section += "\n## Alerts\n"
-            if rejected_count > 0:
-                status_section += f"- ⚠️ {rejected_count} item(s) rejected - check /Rejected/ folder\n"
-            elif briefing_generated:
-                status_section += "- ✅ Daily briefing generated\n"
+            if briefing_generated:
+                self.dashboard.state['last_briefing_date'] = today
+            
+            # Log activity
+            if briefing_generated:
+                self.dashboard.log_activity("Daily Briefing Generated", "Success")
             elif weekly_summary_generated:
-                status_section += "- ✅ Weekly summary generated\n"
-            else:
-                status_section += "_None_\n"
+                self.dashboard.log_activity("Weekly Summary Generated", "Success")
             
-            # Preserve other sections (Gmail, WhatsApp, LinkedIn, Email status)
-            # by extracting them from existing content
-            for section in ['## Gmail Status', '## WhatsApp Status', '## LinkedIn', '## Email Status']:
-                if section in content:
-                    start = content.find(section)
-                    # Find next section
-                    rest = content[start:]
-                    lines = rest.split('\n')
-                    section_lines = [lines[0]]
-                    for line in lines[1:]:
-                        if line.startswith('## ') and line != section:
-                            break
-                        section_lines.append(line)
-                    status_section += '\n' + '\n'.join(section_lines)
+            # Add alerts if needed
+            if rejected_count > 0:
+                self.dashboard.add_alert(f"{rejected_count} item(s) rejected", "warning")
             
-            DASHBOARD_PATH.write_text(status_section, encoding='utf-8')
+            self.dashboard.refresh()
             logger.info("Dashboard updated")
-            
+
         except Exception as e:
             logger.error(f"Error updating dashboard: {e}")
     

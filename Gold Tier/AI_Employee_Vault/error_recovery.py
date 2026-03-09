@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 from typing import Dict, Any, List, Optional
 import threading
 
+from dashboard_manager import get_dashboard_manager
+
 # Import audit logger
 from audit_logger import get_audit_logger
 
@@ -56,6 +58,7 @@ class ErrorRecoverySystem:
         self.service_status = {}
         self.error_queue = []
         self.retry_counts = {}
+        self.dashboard = get_dashboard_manager()
         self._initialize()
     
     def _initialize(self):
@@ -441,45 +444,24 @@ class ErrorRecoverySystem:
     def _update_dashboard(self):
         """Update Dashboard.md with system health."""
         try:
-            if not DASHBOARD_PATH.exists():
-                return
-            
-            content = DASHBOARD_PATH.read_text(encoding='utf-8')
-            
-            # Build health status
-            health_lines = []
+            # Update service status in dashboard
             for service, status in self.service_status.items():
-                icon = "✅" if status['status'] in ['healthy', 'unknown'] else "❌"
-                errors = f" ({status['errors']} errors)" if status['errors'] > 0 else ""
-                health_lines.append(f"- {service.replace('_', ' ').title()}: {icon}{errors}")
+                service_status = 'Running' if status['status'] in ['healthy', 'unknown'] else 'Error'
+                self.dashboard.update_service(service, {
+                    f'{service}_status': service_status
+                })
             
-            health_section = f"""
-## System Health
-{chr(10).join(health_lines)}
-- Last Error: {self._get_last_error()}
-- Queued Errors: {len(self.error_queue)}
-"""
+            # Log any errors
+            if self.error_queue:
+                last_error = self.error_queue[-1]
+                self.dashboard.add_alert(
+                    f"{last_error['service']}: {last_error['error_type']}",
+                    'error'
+                )
             
-            if '## System Health' not in content:
-                content += '\n' + health_section.strip() + '\n'
-            else:
-                lines = content.split('\n')
-                new_lines = []
-                in_section = False
-                for line in lines:
-                    if line.startswith('## System Health'):
-                        in_section = True
-                        new_lines.append(health_section.strip())
-                    elif in_section and line.startswith('## '):
-                        in_section = False
-                        new_lines.append(line)
-                    elif not in_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-            
-            DASHBOARD_PATH.write_text(content, encoding='utf-8')
+            self.dashboard.log_activity("Health Check Completed", "Success")
             logger.info("Dashboard updated with health status")
-            
+
         except Exception as e:
             logger.error(f"Error updating dashboard: {e}")
     

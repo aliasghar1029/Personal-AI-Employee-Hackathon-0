@@ -9,6 +9,8 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import re
 
+from dashboard_manager import get_dashboard_manager
+
 # Set UTF-8 encoding for Windows
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
@@ -298,50 +300,16 @@ def generate_suggestions(completed_tasks, facebook_activity, odoo_summary, busin
 
 def update_dashboard(briefing_path):
     """Update Dashboard.md with briefing status."""
-    if not DASHBOARD_PATH.exists():
-        return
-    
-    content = DASHBOARD_PATH.read_text(encoding='utf-8')
-    
-    briefing_section = f"""## Latest Briefing
-- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-- File: [{briefing_path.name}](Briefings/{briefing_path.name})
-"""
-    
-    if '## Latest Briefing' not in content:
-        # Find a good place to insert it - after Recent Activity or before Quick Links
-        if '## Recent Activity' in content:
-            lines = content.split('\n')
-            new_lines = []
-            for i, line in enumerate(lines):
-                new_lines.append(line)
-                if line.startswith('## Recent Activity'):
-                    # Find the end of this section
-                    for j in range(i+1, len(lines)):
-                        if lines[j].startswith('## '):
-                            # Insert before next section
-                            new_lines = lines[:j] + [''] + [briefing_section.strip()] + [''] + lines[j:]
-                            break
-                    break
-            content = '\n'.join(new_lines)
-        else:
-            content += '\n' + briefing_section.strip() + '\n'
-    else:
-        lines = content.split('\n')
-        new_lines = []
-        in_section = False
-        for line in lines:
-            if line.startswith('## Latest Briefing'):
-                in_section = True
-                new_lines.append(briefing_section.strip())
-            elif in_section and line.startswith('## '):
-                in_section = False
-                new_lines.append(line)
-            elif not in_section:
-                new_lines.append(line)
-        content = '\n'.join(new_lines)
-    
-    DASHBOARD_PATH.write_text(content, encoding='utf-8')
+    try:
+        dashboard = get_dashboard_manager()
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        dashboard.state['last_briefing_date'] = today
+        dashboard.log_activity(f"CEO Briefing Generated: {briefing_path.name}", "Success")
+        dashboard.refresh()
+        
+    except Exception as e:
+        print(f"[ERROR] Failed to update dashboard: {e}")
 
 
 def generate_briefing():

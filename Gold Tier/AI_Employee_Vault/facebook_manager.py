@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import Optional, Tuple, Dict, Any
 
+from dashboard_manager import get_dashboard_manager
+
 # Import audit logger
 from audit_logger import get_audit_logger
 
@@ -59,6 +61,7 @@ class FacebookManager:
         self.playwright_poster = None
         self.audit_logger = get_audit_logger()
         self.posts_published = 0
+        self.dashboard = get_dashboard_manager()
         self._initialize()
     
     def _initialize(self):
@@ -265,49 +268,31 @@ class FacebookManager:
         """Mark a post as published."""
         # This is handled by the individual posters
         pass
-    
+
     def _update_dashboard(self, last_method: str = "unknown"):
         """Update the Dashboard.md with Facebook status."""
         try:
-            if not DASHBOARD_PATH.exists():
-                return
-            
-            content = DASHBOARD_PATH.read_text(encoding='utf-8')
+            now = datetime.now().strftime('%Y-%m-%d %H:%M')
             queue_count = len(list(FACEBOOK_QUEUE.glob('*.md')))
             
             # Count posts this week
             this_week = self._count_posts_this_week()
             last_post = self._get_last_post_time()
             
-            facebook_section = f"""## Facebook Status
-- Last Checked: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-- Last Post: {last_post}
-- Posts This Week: {this_week}
-- Posts in Queue: {queue_count}
-- Method Used: {last_method.title()}
-- Status: Active ✅
-"""
-            
-            if '## Facebook Status' not in content:
-                content += '\n' + facebook_section.strip() + '\n'
-            else:
-                lines = content.split('\n')
-                new_lines = []
-                in_section = False
-                for line in lines:
-                    if line.startswith('## Facebook Status'):
-                        in_section = True
-                        new_lines.append(facebook_section.strip())
-                    elif in_section and line.startswith('## '):
-                        in_section = False
-                        new_lines.append(line)
-                    elif not in_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-            
-            DASHBOARD_PATH.write_text(content, encoding='utf-8')
+            # Increment metrics
+            if self.posts_published > 0:
+                self.dashboard.increment_metric('facebook_posts_total', self.posts_published)
+                self.dashboard.increment_metric('facebook_posts_today', self.posts_published)
+                self.dashboard.increment_metric('facebook_posts_week', self.posts_published)
+
+            self.dashboard.update_service('facebook', {
+                'facebook_last_post': now if self.posts_published > 0 else last_post,
+                'facebook_posts_week': this_week,
+                'facebook_status': 'Running' if self.posts_published > 0 else 'Skip',
+                'facebook_reason': 'Anti-bot protection' if self.dashboard.state.get('facebook_status') == 'Skip' else 'Active'
+            })
             logger.info("Dashboard updated")
-            
+
         except Exception as e:
             logger.error(f"Error updating dashboard: {e}")
     

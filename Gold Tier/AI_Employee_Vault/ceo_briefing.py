@@ -18,6 +18,8 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import Dict, Any, List, Optional
 
+from dashboard_manager import get_dashboard_manager
+
 # Import audit logger
 from audit_logger import get_audit_logger
 
@@ -61,6 +63,7 @@ class CEOBriefingGenerator:
 
     def __init__(self):
         self.audit_logger = get_audit_logger()
+        self.dashboard = get_dashboard_manager()
         self._initialize()
 
     def _initialize(self):
@@ -520,34 +523,12 @@ generated: {now.isoformat()}
     def _update_dashboard(self, briefing_path: Path):
         """Update Dashboard.md with briefing status."""
         try:
-            if not DASHBOARD_PATH.exists():
-                return
-
-            content = DASHBOARD_PATH.read_text(encoding='utf-8')
-
-            briefing_section = f"""## Latest Briefing
-- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-- File: [{briefing_path.name}](Briefings/{briefing_path.name})
-"""
-
-            if '## Latest Briefing' not in content:
-                content += '\n' + briefing_section.strip() + '\n'
-            else:
-                lines = content.split('\n')
-                new_lines = []
-                in_section = False
-                for line in lines:
-                    if line.startswith('## Latest Briefing'):
-                        in_section = True
-                        new_lines.append(briefing_section.strip())
-                    elif in_section and line.startswith('## '):
-                        in_section = False
-                        new_lines.append(line)
-                    elif not in_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-
-            DASHBOARD_PATH.write_text(content, encoding='utf-8')
+            today = datetime.now().strftime('%Y-%m-%d')
+            
+            self.dashboard.state['last_briefing_date'] = today
+            self.dashboard.log_activity(f"CEO Briefing Generated: {briefing_path.name}", "Success")
+            self.dashboard.refresh()
+            
             logger.info("Dashboard updated with briefing info")
 
         except Exception as e:

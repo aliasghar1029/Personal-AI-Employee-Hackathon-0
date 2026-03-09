@@ -15,6 +15,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
+from dashboard_manager import get_dashboard_manager
+
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -55,6 +57,7 @@ class EmailMCPServer:
     def __init__(self):
         self.service = None
         self.sent_emails = []
+        self.dashboard = get_dashboard_manager()
         self._initialize()
     
     def _initialize(self):
@@ -394,51 +397,23 @@ status: failed
                     email_data['subject'] = value
         
         return email_data
-    
+
     def _update_dashboard(self, action: str = None):
         """Update the Dashboard.md with email status."""
-        dashboard_path = VAULT_PATH / 'Dashboard.md'
-        
         try:
-            if not dashboard_path.exists():
-                return
-            
-            content = dashboard_path.read_text(encoding='utf-8')
+            now = datetime.now().strftime('%Y-%m-%d %H:%M')
             
             # Count emails sent today
             today = datetime.now().strftime('%Y-%m-%d')
             emails_today = len([e for e in self.sent_emails if today in e.get('sent_at', '')])
             
-            # Add Email Status section if not exists
-            email_section = f"""
-## Email Status
-- Last Checked: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-- Emails Sent Today: {emails_today}
-- Total Emails Sent: {len(self.sent_emails)}
-- DRY_RUN: {'Yes' if DRY_RUN else 'No'}
-"""
-            
-            if '## Email Status' not in content:
-                content += '\n' + email_section
-            else:
-                # Update existing section
-                lines = content.split('\n')
-                new_lines = []
-                in_section = False
-                for line in lines:
-                    if line.startswith('## Email Status'):
-                        in_section = True
-                        new_lines.append(email_section.strip())
-                    elif in_section and line.startswith('## '):
-                        in_section = False
-                        new_lines.append(line)
-                    elif not in_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-            
-            dashboard_path.write_text(content, encoding='utf-8')
+            self.dashboard.update_service('email_mcp', {
+                'email_mcp_status': 'Running',
+                'emails_sent_today': emails_today,
+                'emails_sent_total': len(self.sent_emails)
+            })
             logger.info("Dashboard updated")
-            
+
         except Exception as e:
             logger.error(f"Error updating dashboard: {e}")
     

@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from typing import Optional, Dict, Any, List
 
+from dashboard_manager import get_dashboard_manager
+
 # Import audit logger
 from audit_logger import get_audit_logger
 
@@ -67,6 +69,7 @@ class OdooMCPServer:
         self.models = None
         self.audit_logger = get_audit_logger()
         self.actions_log = []
+        self.dashboard = get_dashboard_manager()
         self._initialize()
     
     def _initialize(self):
@@ -591,21 +594,18 @@ Create and post a draft invoice in Odoo.
     def _update_dashboard(self):
         """Update Dashboard.md with Odoo status."""
         try:
-            if not DASHBOARD_PATH.exists():
-                return
-
-            content = DASHBOARD_PATH.read_text(encoding='utf-8')
-
+            now = datetime.now().strftime('%Y-%m-%d %H:%M')
+            
             # Count pending approvals
             pending_count = len(list(PENDING_APPROVAL_PATH.glob('*.md')))
-
+            
             # Count actions today
             today = datetime.now().strftime('%Y-%m-%d')
             actions_today = len([a for a in self.actions_log if today in a.get('executed_at', '')])
-
+            
             # Get connection status
-            connection_status = "Connected ✅" if self.uid else "Disconnected ❌"
-
+            connection_status = "Connected" if self.uid else "Disconnected"
+            
             # Count draft invoices from Odoo
             draft_invoices_count = 0
             if self._ensure_connection():
@@ -618,33 +618,14 @@ Create and post a draft invoice in Odoo.
                 except Exception:
                     draft_invoices_count = pending_count  # Fallback to file count
 
-            odoo_section = f"""## Odoo Status
-- Connection: {connection_status}
-- URL: {self.url}
-- Database: {self.db}
-- Pending Invoices: {draft_invoices_count}
-- Actions Today: {actions_today}
-- DRY_RUN: {'Yes' if DRY_RUN else 'No'}
-"""
-
-            if '## Odoo Status' not in content:
-                content += '\n' + odoo_section.strip() + '\n'
-            else:
-                lines = content.split('\n')
-                new_lines = []
-                in_section = False
-                for line in lines:
-                    if line.startswith('## Odoo Status'):
-                        in_section = True
-                        new_lines.append(odoo_section.strip())
-                    elif in_section and line.startswith('## '):
-                        in_section = False
-                        new_lines.append(line)
-                    elif not in_section:
-                        new_lines.append(line)
-                content = '\n'.join(new_lines)
-
-            DASHBOARD_PATH.write_text(content, encoding='utf-8')
+            self.dashboard.update_service('odoo', {
+                'odoo_status': connection_status,
+                'odoo_url': self.url,
+                'odoo_db': self.db,
+                'odoo_draft_invoices': draft_invoices_count,
+                'odoo_actions_today': actions_today,
+                'odoo_dry_run': DRY_RUN
+            })
             logger.info("Dashboard updated")
 
         except Exception as e:
